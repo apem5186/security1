@@ -1,5 +1,7 @@
 package com.cos.security1.config;
 
+import com.cos.security1.config.oauth.PrincipalOauth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
@@ -13,13 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity // 스프링 시큐리티 필터가 스프링 필터체인에 등록
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    // 해당 메서드의 리턴되는 오브젝트를 IoC로 등록해준다.
-    @Bean
-    public BCryptPasswordEncoder encodePwd() {
-        return new BCryptPasswordEncoder();
-    }
+    private final PrincipalOauth2UserService principalOauth2UserService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, HttpSecurity httpSecurity) throws Exception {
@@ -36,6 +35,11 @@ public class SecurityConfig {
                 .loginProcessingUrl("/loginProc") // /login 주소가 호출이 되면 시큐리티가 낚아채서 대신 로그인을 진행
                 .defaultSuccessUrl("/", true)
         );
+
+        http.oauth2Login(oauth -> oauth
+                .loginPage("/login")
+                .userInfoEndpoint(c -> c.userService(principalOauth2UserService))
+                );
 
         return http.build();
     }
